@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sanchay-AI | Professional Coin Audit & Savings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; background: #020617; color: white; -webkit-font-smoothing: antialiased; }
+        .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass-dark { background: rgba(2, 6, 23, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .gradient-text { background: linear-gradient(135deg, #34d399, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .shimmer { position: relative; overflow: hidden; }
+        .shimmer::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(45deg, transparent 45%, rgba(255,255,255,0.05) 50%, transparent 55%); animation: shimmer 3s infinite; }
+        @keyframes shimmer { 0% { transform: translate(-30%, -30%); } 100% { transform: translate(30%, 30%); } }
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body x-data="dashboard()" @init.window="init()">
+    
+    <!-- Background Decor -->
+    <div class="fixed top-0 left-0 w-full h-full -z-10 overflow-hidden opacity-30">
+        <div class="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-emerald-600/20 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px]"></div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <i data-lucide="coins" class="text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight">SANCHAY <span class="text-emerald-400">AI</span></h1>
+                    <p class="text-slate-400 text-sm">Smart Coin Audit & Digital Savings</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="glass px-6 py-3 rounded-2xl flex items-center gap-3 transition-all hover:bg-slate-800/80 cursor-pointer" @click="editUpi()">
+                    <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <span class="text-xs font-mono text-slate-300" x-text="upiId">resident@rbi</span>
+                    <i data-lucide="edit-3" class="w-4 h-4 text-slate-400"></i>
+                </div>
+                <button @click="connectLedger()" 
+                        :disabled="ledgerStatus === 'connecting' || ledgerStatus === 'connected'"
+                        class="px-5 py-3 rounded-2xl font-semibold transition-all flex items-center gap-2 shadow-lg"
+                        :class="{
+                            'bg-emerald-500 hover:bg-emerald-400 text-white shadow-emerald-500/20': ledgerStatus === 'disconnected',
+                            'bg-slate-700 text-slate-400 cursor-not-allowed': ledgerStatus === 'connecting',
+                            'bg-blue-600 text-white shadow-blue-500/20': ledgerStatus === 'connected'
+                        }">
+                    <template x-if="ledgerStatus === 'disconnected'">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>Connect Ledger</span>
+                        </div>
+                    </template>
+                    <template x-if="ledgerStatus === 'connecting'">
+                        <div class="flex items-center gap-2">
+                            <svg class="animate-spin h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span>Connecting...</span>
+                        </div>
+                    </template>
+                    <template x-if="ledgerStatus === 'connected'">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="check-circle" class="w-4 h-4"></i>
+                            <span>Ledger Linked</span>
+                        </div>
+                    </template>
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left: Scanning Controls -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="glass p-8 rounded-[32px] space-y-6">
+                    <div class="space-y-2">
+                        <h3 class="text-xl font-bold">Input Source</h3>
+                        <p class="text-slate-400 text-sm">Capture live or upload historical scans</p>
+                    </div>
+
+                    <!-- Scanner Interface Tabs -->
+                    <div class="flex p-1 bg-slate-900/50 rounded-2xl border border-slate-800 mb-6 font-bold text-[10px] tracking-widest uppercase">
+                        <button @click="setTab('camera')" 
+                                :class="activeTab === 'camera' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-500 hover:text-slate-300'"
+                                class="flex-1 py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="camera" class="w-3 h-3"></i>
+                            Live Scanner
+                        </button>
+                        <button @click="setTab('upload')" 
+                                :class="activeTab === 'upload' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-500 hover:text-slate-300'"
+                                class="flex-1 py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="file-up" class="w-3 h-3"></i>
+                            Image Upload
+                        </button>
+                    </div>
+
+                    <!-- Scanner Interface Content -->
+                    <div class="relative group">
+                        <!-- Camera Mode -->
+                        <div x-show="activeTab === 'camera'" class="space-y-4">
+                            <div class="relative aspect-square bg-black rounded-3xl overflow-hidden border-2 border-emerald-500/30">
+                                <video x-ref="video" autoplay playsinline class="w-full h-full object-cover"></video>
+                                <div class="absolute inset-0 pointer-events-none border-[40px] border-black/20"></div>
+                                <div class="absolute top-4 left-4 bg-emerald-500 text-[10px] font-bold px-2 py-1 rounded text-white shadow-lg">LIVE FEED</div>
+                                <button x-show="availableCameras.length > 1" @click="switchCamera()" class="absolute top-4 right-4 bg-slate-900/80 hover:bg-slate-800 text-white p-2 rounded-xl border border-slate-700 transition-all">
+                                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                            <button @click="capturePhoto()" class="w-full py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20">
+                                <i data-lucide="camera" class="w-5 h-5"></i>
+                                CAPTURE & AUDIT
+                            </button>
+                        </div>
+
+                        <!-- Upload Mode -->
+                        <div x-show="activeTab === 'upload'" x-cloak class="space-y-4">
+                            <input type="file" id="fileInput" class="hidden" @change="handleFileUpload" accept="image/*">
+                            <label for="fileInput" class="block w-full aspect-square bg-slate-900/50 border-2 border-dashed border-slate-700 hover:border-emerald-500 transition-all rounded-3xl cursor-pointer flex flex-col items-center justify-center gap-4 group overflow-hidden">
+                                <template x-if="!selectedImage">
+                                    <div class="text-center p-6">
+                                        <div class="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                            <i data-lucide="file-up" class="text-slate-500 group-hover:text-emerald-400"></i>
+                                        </div>
+                                        <p class="text-sm font-semibold">Select Historical Scan</p>
+                                        <p class="text-xs text-slate-500 mt-2">JPEG, PNG up to 10MB</p>
+                                    </div>
+                                </template>
+                                <template x-if="selectedImage">
+                                    <img :src="selectedImage" class="w-full h-full object-cover">
+                                </template>
+                            </label>
+                            <p class="text-[10px] text-center text-slate-500 font-medium">Click above to change selected image</p>
+                        </div>
+                    </div>
+                    <canvas x-ref="canvas" class="hidden"></canvas>
+
+                    <div class="space-y-4 pt-4">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-400">Savings Split</span>
+                            <span class="text-emerald-400 font-bold" x-text="savingsSplit + '%'">20%</span>
+                        </div>
+                        <input type="range" min="0" max="50" x-model="savingsSplit" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+                        
+                        <div class="pt-4">
+                            <button @click="executeAudit()" :disabled="loading" class="w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white font-bold py-5 rounded-2xl transition-all shadow-xl shadow-blue-500/10 flex items-center justify-center gap-3 disabled:opacity-50 shimmer">
+                                <span x-show="!loading" class="flex items-center gap-2">
+                                    <i data-lucide="zap" class="w-5 h-5"></i>
+                                    EXECUTE AI AUDIT
+                                </span>
+                                <span x-show="loading" class="flex items-center gap-2">
+                                    <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    PROCESSING...
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Card -->
+                <div class="glass p-6 rounded-[28px] flex items-center gap-5">
+                    <div class="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center">
+                        <i data-lucide="shield-check" class="text-blue-400"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold">RBI Compliance</h4>
+                        <p class="text-xs text-slate-400">Real-time oxidation monitoring enabled</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Dashboard Data -->
+            <div class="lg:col-span-8 space-y-8" x-cloak>
+                <!-- KPI Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="glass p-8 rounded-[32px] border-b-4 border-emerald-500/50">
+                        <p class="text-slate-400 text-sm mb-2">Total Value Detected</p>
+                        <h2 class="text-4xl font-bold" x-text="'₹' + (results?.summary?.ai_value || 0)">₹0</h2>
+                        <div class="flex items-center gap-2 mt-4 text-xs">
+                            <span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded-lg" x-text="(results?.summary?.total_coins || 0) + ' coins'">0 coins</span>
+                        </div>
+                    </div>
+                    <div class="glass p-8 rounded-[32px] border-b-4 border-amber-500/50">
+                        <p class="text-slate-400 text-sm mb-2">Digital Gold (SIP)</p>
+                        <h2 class="text-4xl font-bold text-amber-400" x-text="'₹' + (results?.distribution?.digital_gold || 0)">₹0</h2>
+                        <p class="text-xs text-slate-500 mt-4 italic text-amber-500/80">Secured Digital Asset</p>
+                    </div>
+                    <div class="glass p-8 rounded-[32px] border-b-4 border-blue-500/50">
+                        <p class="text-slate-400 text-sm mb-2">Net Wallet Credit</p>
+                        <h2 class="text-4xl font-bold text-blue-400" x-text="'₹' + (results?.distribution?.net_credit || 0)">₹0</h2>
+                        <div class="flex items-center gap-2 mt-4 text-xs">
+                            <span class="text-blue-400" x-show="results?.summary?.mint_bonus > 0">+ ₹0.50 Mint Bonus</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Visualization Area -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Computer Vision Feed -->
+                    <div class="glass p-6 rounded-[32px] overflow-hidden">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold flex items-center gap-2"><i data-lucide="eye" class="w-4 h-4 text-emerald-400"></i> AI Audit Map</h3>
+                            <span class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Live Inference</span>
+                        </div>
+                        <div class="aspect-video bg-slate-900 rounded-2xl flex items-center justify-center overflow-hidden border border-slate-800">
+                            <template x-if="results?.image">
+                                <img :src="results.image" class="w-full h-full object-contain">
+                            </template>
+                            <template x-if="!results?.image">
+                                <div class="text-center opacity-20">
+                                    <i data-lucide="scan" class="w-16 h-16 mx-auto mb-4"></i>
+                                    <p class="text-sm">Awaiting Results</p>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="mt-6 flex justify-between">
+                            <div class="text-center">
+                                <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Oxidation</p>
+                                <p class="font-mono text-lg" x-text="results?.summary?.oxidation || '0.0%'">0.0%</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Audit Status</p>
+                                <span class="px-3 py-1 rounded-full text-xs font-bold" 
+                                      :class="results?.summary?.audit_status.includes('FIT') ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'"
+                                      x-text="results?.summary?.audit_status || 'PENDING'">PENDING</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Denomination Chart -->
+                    <div class="glass p-6 rounded-[32px]">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold flex items-center gap-2"><i data-lucide="bar-chart-3" class="w-4 h-4 text-emerald-400"></i> Denomination Mix</h3>
+                        </div>
+                        <div class="h-[200px] w-full">
+                            <canvas id="denomChart"></canvas>
+                        </div>
+                        <div class="mt-6 space-y-2">
+                            <template x-for="item in results?.breakdown || []" :key="item.name">
+                                <div class="flex justify-between text-sm py-2 border-b border-slate-800">
+                                    <span class="text-slate-400" x-text="item.name + ' Coin'"></span>
+                                    <span class="font-bold" x-text="'Qty: ' + item.value"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Digital Assets Table -->
+                <div class="glass p-8 rounded-[32px]">
+                    <h3 class="text-xl font-bold mb-6">Micro-Savings Ledger</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="text-slate-500 text-xs font-bold uppercase tracking-wider">
+                                <tr>
+                                    <th class="pb-4">Category</th>
+                                    <th class="pb-4">Asset Type</th>
+                                    <th class="pb-4">Amount</th>
+                                    <th class="pb-4 text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm divide-y divide-slate-800">
+                                <tr>
+                                    <td class="py-4">UPI Deposit</td>
+                                    <td class="py-4 text-slate-400">Liquid Cash</td>
+                                    <td class="py-4 font-bold" x-text="'₹' + (results?.distribution?.upi_wallet || 0)">₹0</td>
+                                    <td class="py-4 text-right"><span class="bg-blue-500/10 text-blue-400 px-2 py-1 rounded-md text-xs">READY</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-4">Digital Gold</td>
+                                    <td class="py-4 text-slate-400">99.9% Pure SIP</td>
+                                    <td class="py-4 font-bold text-amber-400" x-text="'₹' + (results?.distribution?.digital_gold || 0)">₹0</td>
+                                    <td class="py-4 text-right"><span class="bg-amber-500/10 text-amber-400 px-2 py-1 rounded-md text-xs">HEDGED</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-4">Impact Fund</td>
+                                    <td class="py-4 text-slate-400">CSR Charity</td>
+                                    <td class="py-4 font-bold text-pink-400" x-text="'₹' + (results?.distribution?.charity || 0)">₹0</td>
+                                    <td class="py-4 text-right"><span class="bg-pink-500/10 text-pink-400 px-2 py-1 rounded-md text-xs">CONTRIBUTED</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Section -->
+    <script>
+        function dashboard() {
+            return {
+                upiId: 'resident@rbi',
+                savingsSplit: 20,
+                selectedImage: null,
+                selectedFile: null,
+                loading: false,
+                results: null,
+                chart: null,
+                activeTab: 'camera',
+                ledgerStatus: 'disconnected',
+                videoStream: null,
+                availableCameras: [],
+                currentCameraIndex: 0,
+
+                init() {
+                    lucide.createIcons();
+                    // Start camera by default if on camera tab
+                    if (this.activeTab === 'camera') this.toggleCamera(true);
+                },
+
+                setTab(tab) {
+                    this.activeTab = tab;
+                    if (tab === 'camera') {
+                        this.toggleCamera(true);
+                    } else {
+                        this.toggleCamera(false);
+                    }
+                    this.$nextTick(() => lucide.createIcons());
+                },
+
+                handleFileUpload(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    this.selectedFile = file;
+                    this.selectedImage = URL.createObjectURL(file);
+                },
+
+                editUpi() {
+                    const newId = window.prompt("Enter new UPI / CBDC ID:", this.upiId);
+                    if (newId && newId.trim()) this.upiId = newId.trim();
+                },
+
+                connectLedger() {
+                    this.ledgerStatus = 'connecting';
+                    setTimeout(() => {
+                        this.ledgerStatus = 'connected';
+                        this.$nextTick(() => lucide.createIcons());
+                    }, 2000);
+                },
+
+                async toggleCamera(on) {
+                    this.showCamera = on;
+                    if (on) {
+                        try {
+                            // Ensure we have permissions first so enumerateDevices returns labels
+                            if (this.availableCameras.length === 0) {
+                                // Preliminary open to trigger permission popup
+                                const initialStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                                
+                                // Now labels should be available
+                                const devices = await navigator.mediaDevices.enumerateDevices();
+                                this.availableCameras = devices.filter(device => device.kind === 'videoinput');
+                                
+                                // Close the initial stream to free it up for the specific device selection
+                                initialStream.getTracks().forEach(track => track.stop());
+
+                                // Try to find a built-in camera
+                                const builtInIdx = this.availableCameras.findIndex(c => 
+                                    c.label.toLowerCase().includes('built-in') || 
+                                    c.label.toLowerCase().includes('facetime') ||
+                                    c.label.toLowerCase().includes('integrated') ||
+                                    c.label.toLowerCase().includes('internal')
+                                );
+                                if (builtInIdx !== -1) this.currentCameraIndex = builtInIdx;
+                            }
+
+                            if (this.videoStream) {
+                                this.videoStream.getTracks().forEach(track => track.stop());
+                            }
+
+                            // Build constraints for the chosen camera
+                            const selectedCamera = this.availableCameras[this.currentCameraIndex];
+                            const constraints = {
+                                video: selectedCamera && selectedCamera.deviceId 
+                                    ? { deviceId: { exact: selectedCamera.deviceId } }
+                                    : { facingMode: 'environment' }
+                            };
+                            
+                            // Add resolution ideals
+                            constraints.video.width = { ideal: 1024 };
+                            constraints.video.height = { ideal: 1024 };
+
+                            this.videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+                            this.$refs.video.srcObject = this.videoStream;
+                            this.$nextTick(() => lucide.createIcons());
+                        } catch (err) {
+                            console.error("Camera Error:", err);
+                            alert("Please allow camera access in your browser to use the scanner. If you have multiple cameras (like Iriun), you can switch between them using the (↻) icon.");
+                            this.showCamera = false;
+                        }
+                    } else {
+                        if (this.videoStream) {
+                            this.videoStream.getTracks().forEach(track => track.stop());
+                            this.videoStream = null;
+                        }
+                    }
+                },
+
+                async switchCamera() {
+                    this.currentCameraIndex = (this.currentCameraIndex + 1) % this.availableCameras.length;
+                    await this.toggleCamera(true);
+                },
+
+                capturePhoto() {
+                    const video = this.$refs.video;
+                    const canvas = this.$refs.canvas;
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    canvas.getContext('2d').drawImage(video, 0, 0);
+                    
+                    canvas.toBlob((blob) => {
+                        this.selectedFile = new File([blob], "capture.jpg", { type: "image/jpeg" });
+                        this.selectedImage = URL.createObjectURL(blob);
+                        this.executeAudit();
+                    }, 'image/jpeg', 0.95);
+                },
+
+                async executeAudit() {
+                    if (!this.selectedFile) {
+                        alert("Please upload a coin photo first.");
+                        return;
+                    }
+
+                    this.loading = true;
+                    const formData = new FormData();
+                    formData.append('file', this.selectedFile);
+                    formData.append('upi_id', this.upiId);
+                    formData.append('savings_split', this.savingsSplit);
+
+                    try {
+                        const response = await fetch('/audit', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        if (!response.ok) throw new Error("Backend error");
+                        
+                        this.results = await response.json();
+                        this.updateChart();
+                        this.$nextTick(() => lucide.createIcons());
+                    } catch (error) {
+                        console.error(error);
+                        alert("Failed to process audit. Check if the backend is running.");
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                updateChart() {
+                    const ctx = document.getElementById('denomChart').getContext('2d');
+                    const data = this.results.breakdown;
+                    
+                    if (this.chart) this.chart.destroy();
+                    
+                    this.chart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: data.map(d => d.name),
+                            datasets: [{
+                                data: data.map(d => d.value),
+                                backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899'],
+                                borderWidth: 0,
+                                borderRadius: 10,
+                                spacing: 10
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '70%',
+                            plugins: {
+                                legend: { display: false }
+                            }
+                        }
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>

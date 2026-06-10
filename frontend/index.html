@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sanchay-AI | Smart Savings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        body { background: radial-gradient(circle at top right, #064e3b, #020617); min-height: 100vh; color: white; }
+    </style>
+</head>
+<body class="p-8 font-sans">
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-12">
+            <div>
+                <h1 class="text-4xl font-bold tracking-tight text-emerald-400">SANCHAY <span class="text-white">AI</span></h1>
+                <p class="text-slate-400">Bridging Physical Cash to Digital Wealth</p>
+            </div>
+            <div class="glass px-6 py-3 rounded-full flex items-center gap-3">
+                <i class="fa-solid fa-wallet text-emerald-400"></i>
+                <span id="upi-display" class="font-mono text-sm text-slate-300">resident@rbi</span>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-1 space-y-6">
+                <div class="glass p-6 rounded-3xl">
+                    <h3 class="text-lg font-semibold mb-4"><i class="fa-solid fa-camera mr-2"></i> Scan Coins</h3>
+                    <input type="file" id="coin-input" class="hidden" accept="image/*">
+                    <label for="coin-input" class="block w-full py-12 border-2 border-dashed border-slate-600 rounded-2xl text-center cursor-pointer hover:border-emerald-500 transition-all">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl mb-2 text-slate-500"></i>
+                        <p class="text-sm text-slate-400">Click to upload or use camera</p>
+                    </label>
+                    <button id="scan-btn" class="w-full mt-6 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-emerald-900/20">
+                        EXECUTE AUDIT
+                    </button>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="glass p-6 rounded-3xl text-center">
+                        <p class="text-slate-400 text-sm mb-1">Total Detected</p>
+                        <h2 id="total-val" class="text-3xl font-bold">₹0</h2>
+                    </div>
+                    <div class="glass p-6 rounded-3xl text-center">
+                        <p class="text-slate-400 text-sm mb-1">Digital Gold (SIP)</p>
+                        <h2 id="gold-val" class="text-3xl font-bold text-amber-400">₹0</h2>
+                    </div>
+                    <div class="glass p-6 rounded-3xl text-center">
+                        <p class="text-slate-400 text-sm mb-1">Net UPI Credit</p>
+                        <h2 id="credit-val" class="text-3xl font-bold text-emerald-400">₹0</h2>
+                    </div>
+                </div>
+
+                <div class="glass p-8 rounded-3xl min-h-[300px] flex items-center justify-center text-slate-500">
+                    <div id="display-area" class="text-center">
+                        <i class="fa-solid fa-microchip text-5xl mb-4 opacity-20"></i>
+                        <p>Awaiting scan results...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const scanBtn = document.getElementById('scan-btn');
+        const coinInput = document.getElementById('coin-input');
+
+        scanBtn.onclick = async () => {
+            if (!coinInput.files[0]) return alert("Please select an image first!");
+            
+            scanBtn.innerText = "PROCESSING...";
+            
+            const formData = new FormData();
+            formData.append("file", coinInput.files[0]);
+            formData.append("savings_split", 20);
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/audit", {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await response.json();
+                
+                // Update UI
+                document.getElementById('total-val').innerText = `₹${data.total}`;
+                document.getElementById('gold-val').innerText = `₹${data.savings.toFixed(2)}`;
+                document.getElementById('credit-val').innerText = `₹${data.upi_credit.toFixed(2)}`;
+                document.getElementById('display-area').innerHTML = `<p class="text-emerald-400 font-bold">✅ Audit Complete: ${data.count} coins verified.</p>`;
+            } catch (err) {
+                alert("Error connecting to backend!");
+            } finally {
+                scanBtn.innerText = "EXECUTE AUDIT";
+            }
+        };
+    </script>
+</body>
+</html>
