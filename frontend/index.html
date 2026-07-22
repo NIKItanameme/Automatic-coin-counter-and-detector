@@ -3,99 +3,864 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sanchay-AI | Smart Savings</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>Sanchay-AI | Smart Coin Audit & Savings Bridge</title>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        body { background: radial-gradient(circle at top right, #064e3b, #020617); min-height: 100vh; color: white; }
+        :root {
+            --bg-color: #05070f;
+            --card-bg: rgba(13, 17, 30, 0.7);
+            --card-border: rgba(255, 255, 255, 0.06);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --primary: #10b981;
+            --primary-glow: rgba(16, 185, 129, 0.15);
+            --gold: #fbbf24;
+            --gold-glow: rgba(251, 191, 36, 0.15);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.15);
+            --indigo: #6366f1;
+            --indigo-glow: rgba(99, 102, 241, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.02) 0%, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            line-height: 1.5;
+            padding: 2rem;
+        }
+
+        /* Glassmorphism utility card */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 1.5rem;
+            padding: 1.75rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* App container */
+        .app-container {
+            max-w: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header Styles */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo-section h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            background: linear-gradient(135deg, #ffffff 0%, #a7f3d0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-section h1 span {
+            color: var(--primary);
+            background: linear-gradient(135deg, var(--primary) 0%, #34d399 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-section p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 400;
+            margin-top: 0.25rem;
+        }
+
+        .wallet-badge {
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            padding: 0.5rem 1.25rem;
+            border-radius: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+        }
+
+        .wallet-badge i {
+            font-size: 0.95rem;
+        }
+
+        .wallet-badge span {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        /* Dashboard Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 420px 1fr;
+            }
+        }
+
+        /* Left Side Controls */
+        .left-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Tab Styles */
+        .tab-group {
+            display: flex;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--card-border);
+            padding: 0.25rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.75rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.25s ease;
+        }
+
+        .tab-btn.active {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Scanning Viewfinder */
+        .scan-viewfinder {
+            position: relative;
+            background: #000;
+            border-radius: 1.25rem;
+            aspect-ratio: 4 / 3;
+            overflow: hidden;
+            border: 1.5px solid var(--card-border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .scan-viewfinder.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .viewfinder-placeholder {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 2rem;
+        }
+
+        .viewfinder-placeholder i {
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.15);
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .viewfinder-placeholder p {
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .viewfinder-placeholder span {
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+
+        /* Live Video Element */
+        #webcam-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* mirror effect */
+        }
+
+        /* Bouncing Laser Line Overlay */
+        .scanner-line {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            box-shadow: 0 0 10px var(--primary);
+            display: none;
+            z-index: 10;
+        }
+
+        .scanning .scanner-line {
+            display: block;
+            animation: scannerLoop 2s infinite ease-in-out;
+        }
+
+        @keyframes scannerLoop {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
+        }
+
+        /* Hidden inputs */
+        .hidden-file-input {
+            display: none;
+        }
+
+        .upload-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            transition: all 0.2s ease;
+        }
+
+        .upload-label:hover {
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .preview-image-elem {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+
+        /* Settings Form Panels */
+        .settings-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            margin-top: 0.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .text-input {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--card-border);
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .text-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .slider-elem {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .slider-elem::-webkit-slider-thumb {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary-glow);
+            transition: transform 0.1s ease;
+        }
+
+        .slider-elem::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        .slider-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--primary);
+            min-width: 3.5rem;
+            text-align: right;
+        }
+
+        /* Action buttons */
+        .deposit-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, #059669 100%);
+            border: none;
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 1.15rem;
+            border-radius: 1rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            box-shadow: 0 8px 20px -6px rgba(16, 185, 129, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .deposit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px -4px rgba(16, 185, 129, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .deposit-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .deposit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #1e293b;
+            color: var(--text-secondary);
+            box-shadow: none;
+        }
+
+        /* Right Side Results and Stats */
+        .right-results {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Metrics grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
+        }
+
+        @media (min-width: 640px) {
+            .metrics-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .metric-card {
+            background: rgba(13, 17, 30, 0.4);
+            border: 1px solid var(--card-border);
+            border-radius: 1.25rem;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: transparent;
+        }
+
+        .metric-card.accent-indigo::before { background: var(--indigo); }
+        .metric-card.accent-emerald::before { background: var(--primary); }
+        .metric-card.accent-gold::before { background: var(--gold); }
+        .metric-card.accent-glow::before { background: linear-gradient(90deg, var(--primary), var(--gold)); }
+
+        .metric-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+        }
+
+        .metric-value.indigo { color: #818cf8; }
+        .metric-value.emerald { color: #34d399; }
+        .metric-value.gold { color: #fbbf24; }
+
+        /* Compliance and Audit Alert bar */
+        .audit-compliance-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        @media (min-width: 640px) {
+            .audit-compliance-section {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+        }
+
+        .audit-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            padding: 0.75rem 1.25rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .audit-badge.fit {
+            color: #34d399;
+            background: rgba(16, 185, 129, 0.05);
+            border-color: rgba(16, 185, 129, 0.15);
+        }
+
+        .audit-badge.unfit {
+            color: #f87171;
+            background: rgba(239, 68, 68, 0.05);
+            border-color: rgba(239, 68, 68, 0.15);
+        }
+
+        .oxidation-meter-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .oxidation-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .oxidation-bar-bg {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .oxidation-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary), var(--danger));
+            border-radius: 4px;
+            transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Detail tables grid */
+        .tables-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .tables-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .table-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .table-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 0.75rem;
+        }
+
+        .table-title i {
+            color: var(--primary);
+        }
+
+        .table-title i.gold-icon {
+            color: var(--gold);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid var(--card-border);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 0.85rem 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            color: var(--text-primary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .mono-text {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .empty-placeholder-table {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 180px;
+            color: rgba(255, 255, 255, 0.15);
+            text-align: center;
+            font-size: 0.85rem;
+            gap: 0.5rem;
+        }
+
+        .empty-placeholder-table i {
+            font-size: 2.25rem;
+        }
+
+        /* Toast Status Notifications */
+        .status-panel {
+            background: rgba(16, 185, 129, 0.04);
+            border: 1px solid rgba(16, 185, 129, 0.1);
+            border-radius: 1rem;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #a7f3d0;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: none; /* hidden initially */
+            animation: fadeIn 0.3s ease;
+        }
+
+        .status-panel.error {
+            background: rgba(239, 68, 68, 0.04);
+            border-color: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Footer Innovation info */
+        footer {
+            margin-top: 3.5rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--card-border);
+            padding-top: 1.5rem;
+        }
+
+        footer span {
+            color: var(--primary);
+        }
     </style>
 </head>
-<body class="p-8 font-sans">
-    <div class="max-w-6xl mx-auto">
-        <header class="flex justify-between items-center mb-12">
-            <div>
-                <h1 class="text-4xl font-bold tracking-tight text-emerald-400">SANCHAY <span class="text-white">AI</span></h1>
-                <p class="text-slate-400">Bridging Physical Cash to Digital Wealth</p>
+<body>
+
+    <div class="app-container">
+        
+        <!-- HEADER -->
+        <header>
+            <div class="logo-section">
+                <h1>SANCHAY <span>AI</span></h1>
+                <p>Bridging Physical Cash to Digital Wealth | Digital India Initiative</p>
             </div>
-            <div class="glass px-6 py-3 rounded-full flex items-center gap-3">
-                <i class="fa-solid fa-wallet text-emerald-400"></i>
-                <span id="upi-display" class="font-mono text-sm text-slate-300">resident@rbi</span>
+            <div class="wallet-badge">
+                <i class="fa-solid fa-wallet"></i>
+                <span id="upi-display">resident@rbi</span>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-1 space-y-6">
-                <div class="glass p-6 rounded-3xl">
-                    <h3 class="text-lg font-semibold mb-4"><i class="fa-solid fa-camera mr-2"></i> Scan Coins</h3>
-                    <input type="file" id="coin-input" class="hidden" accept="image/*">
-                    <label for="coin-input" class="block w-full py-12 border-2 border-dashed border-slate-600 rounded-2xl text-center cursor-pointer hover:border-emerald-500 transition-all">
-                        <i class="fa-solid fa-cloud-arrow-up text-3xl mb-2 text-slate-500"></i>
-                        <p class="text-sm text-slate-400">Click to upload or use camera</p>
-                    </label>
-                    <button id="scan-btn" class="w-full mt-6 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-emerald-900/20">
-                        EXECUTE AUDIT
-                    </button>
+        <!-- DASHBOARD BODY GRID -->
+        <div class="dashboard-grid">
+            
+            <!-- LEFT CONTROL AND SCANNING PANEL -->
+            <div class="left-controls">
+                
+                <!-- SCANNING SYSTEM CARD -->
+                <div class="card">
+                    <!-- Tab Headers -->
+                    <div class="tab-group">
+                        <button id="tab-webcam" class="tab-btn active">
+                            <i class="fa-solid fa-video"></i> Live Camera
+                        </button>
+                        <button id="tab-upload" class="tab-btn">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload Scan
+                        </button>
+                    </div>
+
+                    <!-- Scan Viewfinder Panel -->
+                    <div class="scan-viewfinder" id="viewfinder-box">
+                        <div class="scanner-line" id="viewfinder-laser"></div>
+                        
+                        <!-- Webcam View Container -->
+                        <video id="webcam-video" autoplay playsinline muted style="display: block;"></video>
+                        
+                        <!-- Drag/Drop & File Input Container -->
+                        <div class="upload-label" id="upload-box" style="display: none;">
+                            <input type="file" id="coin-input" class="hidden-file-input" accept="image/*">
+                            <label for="coin-input" class="upload-label">
+                                <i class="fa-solid fa-images text-slate-500" style="font-size: 2.5rem; color: rgba(255,255,255,0.2); margin-bottom: 0.75rem;"></i>
+                                <p style="font-size: 0.9rem; color: var(--text-primary); margin-bottom: 0.25rem;">Select Coin Photo</p>
+                                <span style="font-size: 0.75rem; color: var(--text-secondary);">Supports JPEG, PNG</span>
+                            </label>
+                            <!-- Thumbnail Preview -->
+                            <img id="preview-img" class="preview-image-elem" alt="Preview Selection">
+                        </div>
+                    </div>
+
+                    <!-- Configuration Panel -->
+                    <div class="settings-section" style="margin-top: 1.5rem;">
+                        <div class="input-group">
+                            <label for="upi-input">Target UPI ID</label>
+                            <input type="text" id="upi-input" class="text-input" value="resident@rbi" placeholder="e.g. name@upi">
+                        </div>
+
+                        <div class="input-group">
+                            <label for="savings-slider">Micro-Savings Split</label>
+                            <div class="slider-container">
+                                <input type="range" id="savings-slider" class="slider-elem" min="0" max="50" value="20">
+                                <span id="savings-value-display" class="slider-value">20%</span>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="manual-input">Manual Override Total (₹)</label>
+                            <input type="number" id="manual-input" class="text-input" value="0" min="0" placeholder="0 for AI detection total">
+                        </div>
+
+                        <!-- Execute trigger -->
+                        <button id="scan-btn" class="deposit-btn" style="margin-top: 0.5rem;">
+                            <i class="fa-solid fa-bolt"></i> Execute Smart Deposit
+                        </button>
+                    </div>
                 </div>
+
+                <!-- Live Transaction Feedback panel -->
+                <div class="status-panel" id="status-message">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span id="status-text">Verified: ₹0.00 | Digital Gold Split Active</span>
+                </div>
+
             </div>
 
-            <div class="lg:col-span-2 space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="glass p-6 rounded-3xl text-center">
-                        <p class="text-slate-400 text-sm mb-1">Total Detected</p>
-                        <h2 id="total-val" class="text-3xl font-bold">₹0</h2>
+            <!-- RIGHT LEDGERS & METRICS PANEL -->
+            <div class="right-results">
+                
+                <!-- METRICS GRID -->
+                <div class="metrics-grid">
+                    <!-- Total Coins -->
+                    <div class="metric-card accent-indigo">
+                        <p class="metric-label">Coins Audited</p>
+                        <h2 class="metric-value indigo" id="total-coins-val">0</h2>
                     </div>
-                    <div class="glass p-6 rounded-3xl text-center">
-                        <p class="text-slate-400 text-sm mb-1">Digital Gold (SIP)</p>
-                        <h2 id="gold-val" class="text-3xl font-bold text-amber-400">₹0</h2>
+                    <!-- Total detected -->
+                    <div class="metric-card accent-glow">
+                        <p class="metric-label">Grand Total</p>
+                        <h2 class="metric-value" id="total-val">₹0.00</h2>
                     </div>
-                    <div class="glass p-6 rounded-3xl text-center">
-                        <p class="text-slate-400 text-sm mb-1">Net UPI Credit</p>
-                        <h2 id="credit-val" class="text-3xl font-bold text-emerald-400">₹0</h2>
+                    <!-- Gold Savings -->
+                    <div class="metric-card accent-gold">
+                        <p class="metric-label">Digital Gold (SIP)</p>
+                        <h2 class="metric-value gold" id="gold-val">₹0.00</h2>
+                    </div>
+                    <!-- UPI Credit -->
+                    <div class="metric-card accent-emerald">
+                        <p class="metric-label">Net UPI Credit</p>
+                        <h2 class="metric-value emerald" id="credit-val">₹0.00</h2>
                     </div>
                 </div>
 
-                <div class="glass p-8 rounded-3xl min-h-[300px] flex items-center justify-center text-slate-500">
-                    <div id="display-area" class="text-center">
-                        <i class="fa-solid fa-microchip text-5xl mb-4 opacity-20"></i>
-                        <p>Awaiting scan results...</p>
+                <!-- COMPLIANCE AND AUDIT META BAR -->
+                <div class="card">
+                    <div class="audit-compliance-section">
+                        <div class="audit-badge" id="status-badge">
+                            <i class="fa-solid fa-shield-halved"></i> Awaiting Audit
+                        </div>
+                        
+                        <div class="oxidation-meter-container">
+                            <div class="oxidation-meta">
+                                <span>COIN OXIDATION LEVEL</span>
+                                <span id="oxidation-val">0.0%</span>
+                            </div>
+                            <div class="oxidation-bar-bg">
+                                <div class="oxidation-bar-fill" id="oxidation-bar-fill"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- DETAIL BREAKDOWN LEDGERS -->
+                <div class="card">
+                    <div class="tables-grid">
+                        
+                        <!-- Denominations breakdown -->
+                        <div class="table-container">
+                            <h3 class="table-title">
+                                <i class="fa-solid fa-list-check"></i> Denomination Audit
+                            </h3>
+                            <div id="denom-empty-placeholder" class="empty-placeholder-table">
+                                <i class="fa-solid fa-table-list"></i>
+                                <p>Execute deposit scan to inspect details</p>
+                            </div>
+                            <table id="denom-table" style="display: none;">
+                                <thead>
+                                    <tr>
+                                        <th>Coin</th>
+                                        <th>Qty</th>
+                                        <th style="text-align: right;">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="denom-table-body">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Savings distribution -->
+                        <div class="table-container">
+                            <h3 class="table-title">
+                                <i class="fa-solid fa-chart-pie gold-icon"></i> Asset Allocation
+                            </h3>
+                            <div id="savings-empty-placeholder" class="empty-placeholder-table">
+                                <i class="fa-solid fa-chart-column"></i>
+                                <p>Execute deposit scan to inspect details</p>
+                            </div>
+                            <table id="savings-table" style="display: none;">
+                                <thead>
+                                    <tr>
+                                        <th>Channel</th>
+                                        <th style="text-align: right;">Allocation</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="savings-table-body">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+
             </div>
+
         </div>
+
+        <!-- FOOTER -->
+        <footer>
+            <p>Sanchay-AI Engine v1.0.0. Designed for <span>Digital India</span> innovation challenge.</p>
+        </footer>
+
     </div>
 
-    <script>
-        const scanBtn = document.getElementById('scan-btn');
-        const coinInput = document.getElementById('coin-input');
-
-        scanBtn.onclick = async () => {
-            if (!coinInput.files[0]) return alert("Please select an image first!");
-            
-            scanBtn.innerText = "PROCESSING...";
-            
-            const formData = new FormData();
-            formData.append("file", coinInput.files[0]);
-            formData.append("savings_split", 20);
-
-            try {
-                const response = await fetch("http://127.0.0.1:8000/audit", {
-                    method: "POST",
-                    body: formData
-                });
-                const data = await response.json();
-                
-                // Update UI
-                document.getElementById('total-val').innerText = `₹${data.total}`;
-                document.getElementById('gold-val').innerText = `₹${data.savings.toFixed(2)}`;
-                document.getElementById('credit-val').innerText = `₹${data.upi_credit.toFixed(2)}`;
-                document.getElementById('display-area').innerHTML = `<p class="text-emerald-400 font-bold">✅ Audit Complete: ${data.count} coins verified.</p>`;
-            } catch (err) {
-                alert("Error connecting to backend!");
-            } finally {
-                scanBtn.innerText = "EXECUTE AUDIT";
-            }
-        };
-    </script>
+    <!-- Client Scripts -->
+    <script src="script.js"></script>
 </body>
 </html>
