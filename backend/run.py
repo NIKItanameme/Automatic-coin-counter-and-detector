@@ -11,7 +11,7 @@ def run_app():
         sys.executable,
         "-m",
         "uvicorn",
-        "main:app",
+        "backend.main:app",
         "--host",
         "0.0.0.0",
         "--port",
