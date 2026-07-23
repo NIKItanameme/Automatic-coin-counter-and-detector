@@ -38,4 +38,7 @@ def run_app():
             port
         ])
     except KeyboardInterrupt:
-        print("\n--- [SYSTEM] SHUTTING DO
+        print("\n--- [SYSTEM] SHUTTING DOWN ---")
+
+if __name__ == "__main__":
+    run_app()
